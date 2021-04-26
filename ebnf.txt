@@ -1,0 +1,15 @@
+program ::= {line ";"} line.
+line ::= formula | "if" formula "then" line "else" line "fi" | "let" variable "=" formula "in" line "end".
+formula ::= formula "EQUALS" formula | formula "GREATERTHAN" formula | formula "LESSTHAN" formula
+	  | formula "IMPLIES" formula | formula "AND" formula | formula "OR" formula | formula "XOR" formula
+	  | "NEGATE" formula | formula "PLUS" formula | formula "MINUS" formula | formula "TIMES" formula
+	  | "NOT" formula | "(" formula ")" | constant | number | variable.
+
+constant ::= "TRUE" | "FALSE".
+number ::= Integer {ZeroInteger}.
+variable ::= Letter {Letter}.
+
+Letter := “A” | “B” | “C” | “D” | “E” | “F” | “G” | “H” | “I” | “J” | “K” | “L” | “M” | “N” | “O” | “P” | “Q” | “R” | “S” | “T” | “U” | “V ” | “W” | “X” | “Y ” | “Z”
+	| “a” | “b” | “c” | “d” | “e” | “f” | “g” | “h” | “i” | “j” | “k” | “l” | “m” | “n” | “o” | “p” | “q” | “r” | “s” | “t” | “u” | “v” | “w” | “x” | “y” | “z”
+Integer := "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+ZeroInteger := Integer | "0"
