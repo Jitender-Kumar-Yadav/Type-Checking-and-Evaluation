@@ -1,5 +1,4 @@
 (*User  declarations*)
-fun BoolToString(s : bool) = if s then "TRUE" else "FALSE";
 
 %%
 (*Declarations*)
@@ -17,7 +16,9 @@ fun BoolToString(s : bool) = if s then "TRUE" else "FALSE";
 	| FUN | FN | COLON | DEF | ARROW
 	| IF | THEN | ELSE | FI | LET | IN | END
 
-%nonterm START | program | statement | line | formula | typ
+%nonterm
+	START of AST.lines | program of AST.lines | line of AST.expn
+	| formula of AST.expn | typ of AST.typ
 
 %pos int
 
@@ -40,34 +41,38 @@ fun BoolToString(s : bool) = if s then "TRUE" else "FALSE";
 
 %%
 (*Rules*)
-START:		program										(program1; print("START]\n"))
-program:	line										(line1; print("program, "))
-			| line TERM program							(line1; print("TERM, "); program1; print("program, "))
-line:		formula										(formula1; print("line, "))
+START:		program										(program1)
+
+program:	line										(AST.statement(line1))
+			| line TERM program							(AST.statements(line1, program1))
+
+line:		formula										(formula1)
 			| FUN ID LPAREN ID COLON typ RPAREN
-			COLON typ DEF formula						(print("FUN, "); print(ID1^", "); print("(, "); print(ID2^", "); print(":, "); typ1; print("), "); print(":, "); typ2; print("=>, "); formula1; print("line, "))
-			| IF formula THEN line ELSE line FI			(print("IF, "); formula1; print("THEN, "); line1; print("ELSE, "); line2; print("FI, "); print("line, "))
-			| LET ID ASSIGN formula IN line END			(print("LET, "); print(ID1^", "); print("=, "); formula1; print("IN, "); line1; print("END, "); print("line, "))
+			COLON typ DEF formula						(AST.Fun(ID1, ID2, typ1, typ2, formula1))
+			| IF formula THEN line ELSE line FI			(AST.IfExp(formula1, line1, line2))
+			| LET ID ASSIGN formula IN line END			(AST.LetExp(ID1, formula1, line1))
+
 formula:	FN LPAREN ID COLON typ RPAREN
-			COLON typ DEF formula						(print("FUN, "); print("(, "); print(ID1^", "); print(":, "); typ1; print("), "); print(":, "); typ2; print("=>, "); formula1; print("line, "))
-			| formula EQUALS formula					(formula1; print("EQUALS, "); formula2; print("formula, "))
-			| formula LESSTHAN formula					(formula1; print("LESSTHAN, "); formula2; print("formula, "))
-			| formula GREATERTHAN formula				(formula1; print("GREATERTHAN, "); formula2; print("formula, "))
-			| formula IMPLIES formula					(formula1; print("IMPLIES, "); formula2; print("formula, "))
-			| formula AND formula						(formula1; print("AND, "); formula2; print("formula, "))
-			| formula OR formula						(formula1; print("OR, "); formula2; print("formula, "))
-			| formula XOR formula						(formula1; print("XOR, "); formula2; print("formula, "))
-			| NEGATE formula							(print("NEGATE, "); formula1; print("formula, "))
-			| formula PLUS formula						(formula1; print("PLUS, "); formula2; print("formula, "))
-			| formula MINUS formula						(formula1; print("MINUS, "); formula2; print("formula, "))
-			| formula TIMES formula						(formula1; print("TIMES, "); formula2; print("formula, "))
-			| NOT formula								(print("NOT, "); formula1; print("formula, "))
-			| LPAREN formula RPAREN						(print("(, "); formula1; print("), "); print("formula, "))
-			| LPAREN ID formula RPAREN					(print("(, "); print(ID1^", "); formula1; print("), "); print("formula, "))
-			| CONST										(print(BoolToString(CONST1)^", "); print("formula, "))
-			| NUM										(print(Int.toString(NUM1)^", "); print("formula, "))
-			| ID										(print(ID1^", "); print("formula, "))
-typ:		INT											(print("INT, "); print("typ, "))
-			| BOOL										(print("BOOL, "); print("typ, "))
-			| typ ARROW typ								(typ1; print("->, "); typ2; print("typ, "))
-			| LPAREN typ RPAREN							(print("(, "); typ1; print("), "); print("typ, "))
+			COLON typ DEF formula						(AST.Fn(ID1, typ1, typ2, formula1))
+			| formula EQUALS formula					(AST.BinExp(AST.EQUALS, formula1, formula2))
+			| formula LESSTHAN formula					(AST.BinExp(AST.LESSTHAN, formula1, formula2))
+			| formula GREATERTHAN formula				(AST.BinExp(AST.GREATERTHAN, formula1, formula2))
+			| formula IMPLIES formula					(AST.BinExp(AST.IMPLIES, formula1, formula2))
+			| formula AND formula						(AST.BinExp(AST.AND, formula1, formula2))
+			| formula OR formula						(AST.BinExp(AST.OR, formula1, formula2))
+			| formula XOR formula						(AST.BinExp(AST.XOR, formula1, formula2))
+			| NEGATE formula							(AST.negate(formula1))
+			| formula PLUS formula						(AST.BinExp(AST.PLUS, formula1, formula2))
+			| formula MINUS formula						(AST.BinExp(AST.MINUS, formula1, formula2))
+			| formula TIMES formula						(AST.BinExp(AST.TIMES, formula1, formula2))
+			| NOT formula								(AST.NOT(formula1))
+			| LPAREN formula RPAREN						(formula1)
+			| LPAREN ID formula RPAREN					(AST.AppExp(ID1, formula1))
+			| CONST										(AST.BoolExp(CONST1))
+			| NUM										(AST.NumExp(NUM1))
+			| ID										(AST.VarExp(ID1))
+
+typ:		INT											(AST.INT)
+			| BOOL										(AST.BOOL)
+			| typ ARROW typ								(AST.ARROW(typ1, typ2))
+			| LPAREN typ RPAREN							(typ1)

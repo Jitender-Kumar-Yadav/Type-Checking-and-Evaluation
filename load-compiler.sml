@@ -1,22 +1,24 @@
 structure compilerLrVals = compilerLrValsFun(structure Token = LrParser.Token)
 structure compilerLex = compilerLexFun(structure Tokens = compilerLrVals.Tokens);
 structure compilerParser =
-	  Join(structure LrParser = LrParser
-     	       structure ParserData = compilerLrVals.ParserData
-     	       structure Lex = compilerLex)
+	Join(structure LrParser = LrParser
+	structure ParserData = compilerLrVals.ParserData
+	structure Lex = compilerLex)
 
 fun invoke lexstream =
-    	     	let fun print_error (s, linenum:int, col:int) =
-					TextIO.output(TextIO.stdOut, "Syntax Error:" ^ (Int.toString linenum) ^ ":" ^ (Int.toString col) ^ ":" ^ s ^ "\n")
-		in
-		    compilerParser.parse(0, lexstream, print_error, ())
-		end
+	let
+		fun print_error (s, linenum:int, col:int) =
+			TextIO.output(TextIO.stdOut, "Syntax Error:" ^ (Int.toString linenum) ^ ":" ^ (Int.toString col) ^ ":" ^ s ^ "\n")
+	in
+		compilerParser.parse(0, lexstream, print_error, ())
+	end
 
 fun stringToLexer str =
-    let val done = ref false
-    	val lexer =  compilerParser.makeLexer (fn _ => if (!done) then "" else (done:=true;str))
+    let
+		val done = ref false
+		val lexer =  compilerParser.makeLexer (fn _ => if (!done) then "" else (done:=true;str))
     in
-	lexer
+		lexer
     end
 
 fun parse (lexer) =
@@ -31,12 +33,17 @@ fun parse (lexer) =
 
 val parseString = parse o stringToLexer
 
-fun scanParse filename =
+fun compile filename =
 	let
 		val file = TextIO.openIn filename
         val s = TextIO.inputAll file
         val _ = TextIO.closeIn file
+		val i = parseString(s)
     in
-		(parseString(s)) 
+		(TypeCheckEvaluator.printTree(i);
+		print("\n\n---------------------------\n\nEvaluated Value(s):\n\n");
+		TypeCheckEvaluator.evalStatements(i, []);
+		print("---------------------------\n\n"))
 	end
-		handle invalidTokenError msg => print("\n"^msg^"\n");
+		handle invalidTokenError msg => print("\n"^msg^"\n")
+		| Fail msg => print("\n"^msg^"\n");

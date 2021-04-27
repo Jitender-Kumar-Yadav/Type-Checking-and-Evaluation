@@ -9,8 +9,14 @@ structure Tokens = Tokens
 	val yylineno = ref 1
 	val count = ref 0
 	
-	val eof = fn () => (print("]\n\nParse Tree Post-Order: \n["); Tokens.EOF(!yylineno, !col))
-	val ret = fn (e : string) => if ((!count) = 0) then print("Scanned Stream of Tokens: \n["^e) else print(", "^e)
+	val eof = fn () =>
+		(print("]\n\nTotal "^(Int.toString(!count))^" Tokens\n\n---------------------------\n\nAbstract Syntax:\n\n");
+		Tokens.EOF(!yylineno, !col))
+	val ret = fn (e : string) =>
+		if ((!count) = 0) then
+			print("\n---------------------------\n\nScanned Stream of Tokens:\n\n["^e)
+		else
+			print(", "^e)
 	val StringToBool = fn (s : string) => if (s = "TRUE") then true else false
 	val allCaps = String.map Char.toUpper
 	
