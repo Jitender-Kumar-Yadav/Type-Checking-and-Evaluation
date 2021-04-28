@@ -1,9 +1,14 @@
 program ::= {line ";"} line.
-line ::= formula | "if" formula "then" line "else" line "fi" | "let" variable "=" formula "in" line "end".
-formula ::= formula "EQUALS" formula | formula "GREATERTHAN" formula | formula "LESSTHAN" formula
+
+line ::= formula | "fun" variable "(" variable ":" typ ")" ":" typ "=>" formula | "if" formula "then" line "else" line "fi" | "let" variable "=" formula "in" line "end".
+
+formula ::= "fn" "(" variable ":" typ ")" ":" typ "=>" formula
+	  | formula "EQUALS" formula | formula "GREATERTHAN" formula | formula "LESSTHAN" formula
 	  | formula "IMPLIES" formula | formula "AND" formula | formula "OR" formula | formula "XOR" formula
 	  | "NEGATE" formula | formula "PLUS" formula | formula "MINUS" formula | formula "TIMES" formula
 	  | "NOT" formula | "(" formula ")" | constant | number | variable.
+
+type ::= "int" | "boolean" | type "->" typ | "(" typ ")"
 
 constant ::= "TRUE" | "FALSE".
 number ::= Integer {ZeroInteger}.
